@@ -41,6 +41,18 @@ async function run() {
         })
 
         app.get('/foods', async (req, res) => {
+            const status = req.query.status;
+            // console.log(' const status = req.query.status;', status)
+            let query = {};
+            if (req.query?.status) {
+                query = { status: status }
+            }
+            const result = await foodCollections.find(query).toArray();
+            res.send(result)
+        })
+
+
+        app.get('/foods', async (req, res) => {
             const result = await foodCollections.find().toArray();
             res.send(result)
         })
