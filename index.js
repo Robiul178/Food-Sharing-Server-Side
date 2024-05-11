@@ -32,6 +32,7 @@ async function run() {
 
 
         const foodCollections = client.db("foods").collection("food-collection");
+        const requestFood = client.db("foods").collection("requestFood")
 
 
         app.post('/foods', async (req, res) => {
@@ -39,7 +40,13 @@ async function run() {
             const result = await foodCollections.insertOne(data);
             res.send(result)
         })
+        app.post('/request-food', async (req, res) => {
+            const data = req.body;
+            const result = await requestFood.insertOne(data);
+            res.send(result)
+        })
 
+        //get data by status
         app.get('/foods', async (req, res) => {
             const status = req.query.status;
             // console.log(' const status = req.query.status;', status)
@@ -60,8 +67,22 @@ async function run() {
         app.get("/foods/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
-            // const query = { _id: new ObjectId(id) }
             const result = await foodCollections.findOne(query);
+            res.send(result)
+        })
+
+        //add new collection
+        // app.post("/foods", async (req, res) => {
+        //     const data = req.body;
+        //     console.log('data from', server)
+        //     const result = await requestFood.insertOne(data);
+        //     res.send(result)
+        // })
+
+        app.delete("/foods/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodCollections.deleteOne(query);
             res.send(result)
         })
 
