@@ -58,9 +58,26 @@ async function run() {
             res.send(result)
         })
 
+        //get data by email
+        app.get('/foods', async (req, res) => {
+            const email = req.query.email;
+            // console.log(' const status = req.query.status;', status)
+            let query = {};
+            if (req.query?.email) {
+                query = { status: email }
+            }
+            const result = await foodCollections.find(query).toArray();
+            res.send(result)
+        })
+
 
         app.get('/foods', async (req, res) => {
             const result = await foodCollections.find().toArray();
+            res.send(result)
+        })
+
+        app.get('/request-food', async (req, res) => {
+            const result = await requestFood.find().toArray();
             res.send(result)
         })
 
@@ -71,13 +88,18 @@ async function run() {
             res.send(result)
         })
 
-        //add new collection
-        // app.post("/foods", async (req, res) => {
-        //     const data = req.body;
-        //     console.log('data from', server)
-        //     const result = await requestFood.insertOne(data);
-        //     res.send(result)
-        // })
+        //update
+        app.put("/foods/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updateFood = req.body;
+            console.log(updateFood)
+
+
+
+            // res.send(result)
+        })
+
 
         app.delete("/foods/:id", async (req, res) => {
             const id = req.params.id;
