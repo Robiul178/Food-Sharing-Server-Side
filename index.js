@@ -28,7 +28,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
 
         const foodCollections = client.db("foods").collection("food-collection");
@@ -46,10 +46,29 @@ async function run() {
             res.send(result)
         })
 
+
+
+
+        //email
+        app.get('/food/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { 'donator.email': email };
+            const result = await foodCollections.find(query).toArray()
+            res.send(result)
+        })
+
+        //get food by id
+        app.get('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodCollections.findOne(query);
+            res.send(result)
+        })
+
+
         //get data by status
         app.get('/foods', async (req, res) => {
             const status = req.query.status;
-            // console.log(' const status = req.query.status;', status)
             let query = {};
             if (req.query?.status) {
                 query = { status: status }
@@ -59,15 +78,14 @@ async function run() {
         })
 
         //get data by user
-        app.get('/foods/:email', async (req, res) => {
-            const email = req.params.email;
-            console.log(email)
-            const query = { 'donator.email': email };
-            const result = await foodCollections.find(query).toArray()
+
+
+        ///get
+        app.get('/foods', async (req, res) => {
+            const result = await foodCollections.find().toArray();
             res.send(result)
         })
-
-        app.get('/foods', async (req, res) => {
+        app.get('/food', async (req, res) => {
             const result = await foodCollections.find().toArray();
             res.send(result)
         })
@@ -77,27 +95,26 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/foods/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await foodCollections.findOne(query);
+        //email
+        app.get('/request-food/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {
+                user_email: email
+            };
+            const result = await requestFood.find(query).toArray()
             res.send(result)
         })
+
 
         //update
         app.put("/foods/:id", async (req, res) => {
             const id = req.params.id;
+            const foodData = req.body;
             const filter = { _id: new ObjectId(id) }
             const options = { upsert: true };
             const updateFood = {
                 $set: {
-                    food_name: updateFood.food_name,
-                    donato: updateFood.donato,
-                    food_quantity: updateFood.food_quantity,
-                    food_image: updateFood.food_image,
-                    pickup_location: updateFood.pickup_location,
-                    expired_datetime: updateFood.expired_datetime,
-                    status: updateFood.status
+                    ...foodData
                 }
             }
 
@@ -116,7 +133,7 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
