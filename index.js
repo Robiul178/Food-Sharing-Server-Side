@@ -30,7 +30,6 @@ const verifyToken = (req, res, next) => {
         if (err) {
             return res.status(401).send({ message: 'unauthorized access' })
         }
-        console.log('req.user', decoded)
         req.user = decoded;
         next()
     })
@@ -89,10 +88,6 @@ async function run() {
         //my added food
         app.get('/food/:email', verifyToken, async (req, res) => {
 
-
-            // console.log('user email', email)
-            // console.log('req query email', req.user.email)
-
             if (req.user.email !== req.params.email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
@@ -113,7 +108,7 @@ async function run() {
 
 
         //get data by status
-        app.get('/foods', async (req, res) => {
+        app.get('/foods', verifyToken, async (req, res) => {
 
             const status = req.query.status;
             let query = {};
@@ -128,7 +123,7 @@ async function run() {
 
 
         ///get
-        app.get('/foods', async (req, res) => {
+        app.get('/foods', verifyToken, async (req, res) => {
 
             const result = await foodCollections.find().toArray();
             res.send(result)
@@ -144,11 +139,14 @@ async function run() {
         })
 
         //manage food reguest
-        app.get('/request-food/:email', async (req, res) => {
+        app.get('/request-food/:email', verifyToken, async (req, res) => {
 
-
-            // console.log('from cookies email', req.cookies)
             const email = req.params.email;
+            const tokenEmail = req.user.email;
+
+            if (tokenEmail !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const query = {
                 user_email: email
             };
