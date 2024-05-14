@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
+let jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
@@ -16,28 +16,26 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+
 app.use(cookieParser());
 
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies.token
-    console.log('token in the middlewafe', token)
+    // console.log('token in the middlewafe', token)
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+    jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access' })
+        }
+        console.log('req.user', decoded)
+        req.user = decoded;
+        next()
+    })
 
 }
-
-/**
- *   
-    // if (!token) {
-    //     return res.status(401).send({ message: 'unauthorized access' })
-    // }
-    // jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, (err, decoded) => {
-    //     if (err) {
-    //         return res.status(401).send({ message: 'unauthorized access' })
-    //     }
-    //     req.user = decoded;
-    //     next()
-    // })
- */
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pg5idq6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -92,10 +90,12 @@ async function run() {
         app.get('/food/:email', verifyToken, async (req, res) => {
 
 
-            // if (req.user.email !== req.query.email) {
-            //     return res.status(403).send({ message: 'forbidden access' })
-            // }
+            // console.log('user email', email)
+            // console.log('req query email', req.user.email)
 
+            if (req.user.email !== req.params.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const email = req.params.email;
             const query = { 'donator.email': email };
             const result = await foodCollections.find(query).toArray()
@@ -130,8 +130,6 @@ async function run() {
         ///get
         app.get('/foods', async (req, res) => {
 
-            // console.log('req query emal', req.query.email)
-            // console.log('req query emal', req.body)
             const result = await foodCollections.find().toArray();
             res.send(result)
         })
