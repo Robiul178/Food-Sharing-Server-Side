@@ -11,7 +11,8 @@ const port = process.env.PORT || 1000;
 //middleware
 app.use(cors({
     origin: [
-        'http://127.0.0.1:5173'
+        'http://127.0.0.1:5173',
+        'https://mealforheal.netlify.app',
     ],
     credentials: true
 }));
@@ -24,11 +25,11 @@ const verifyToken = (req, res, next) => {
     const token = req.cookies.token
     // console.log('token in the middlewafe', token)
     if (!token) {
-        return res.status(401).send({ message: 'unauthorized access' })
+        return res.status(401).send({ message: ' unauthorized access' })
     }
     jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, (err, decoded) => {
         if (err) {
-            return res.status(401).send({ message: 'unauthorized access' })
+            return res.status(401).send({ message: ' unauthorized access' })
         }
         req.user = decoded;
         next()
@@ -51,7 +52,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const foodCollections = client.db("foods").collection("food-collection");
         const requestFood = client.db("foods").collection("requestFood")
@@ -61,8 +62,8 @@ async function run() {
             const token = jwt.sign(user, process.env.ACCESS_SECRET_TOKEN, { expiresIn: '1h' });
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: true,
-                sameSite: 'none',
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
             }).send({ success: true })
         });
 
@@ -86,11 +87,8 @@ async function run() {
 
 
         //my added food
-        app.get('/food/:email', verifyToken, async (req, res) => {
+        app.get('/food/:email', async (req, res) => {
 
-            if (req.user.email !== req.params.email) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
             const email = req.params.email;
             const query = { 'donator.email': email };
             const result = await foodCollections.find(query).toArray()
@@ -108,7 +106,7 @@ async function run() {
 
 
         //get data by status
-        app.get('/foods', verifyToken, async (req, res) => {
+        app.get('/foods', async (req, res) => {
 
             const status = req.query.status;
             let query = {};
@@ -119,12 +117,9 @@ async function run() {
             res.send(result)
         })
 
-        //get data by user
-
 
         ///get
-        app.get('/foods', verifyToken, async (req, res) => {
-
+        app.get('/foods', async (req, res) => {
             const result = await foodCollections.find().toArray();
             res.send(result)
         })
